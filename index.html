@@ -1,0 +1,1579 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>彩虹小兔大冒险 3D · 10关卡通乐园</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{width:100%;height:100%;overflow:hidden;background:#0b1020;
+    font-family:"PingFang SC","Yuanti SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sans-serif;
+    user-select:none;-webkit-user-select:none}
+  #game{display:block;width:100%;height:100%;touch-action:none}
+  #loading{position:fixed;inset:0;z-index:40;display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(180deg,#8fd8ff,#e8f9ff);color:#2b3a67;font-weight:900;font-size:18px}
+  #loading.hide{display:none}
+
+  /* ---------- HUD ---------- */
+  #hud{position:fixed;top:0;left:0;width:100%;z-index:20;pointer-events:none;
+    display:flex;align-items:flex-start;justify-content:space-between;gap:8px;
+    padding:calc(10px + env(safe-area-inset-top)) 14px 0 14px;
+    font-weight:800;color:#fff;text-shadow:0 2px 0 rgba(0,0,0,.18),0 4px 10px rgba(0,0,0,.22)}
+  #hud.hide{display:none}
+  .hud-box{background:rgba(255,255,255,.24);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+    border:2px solid rgba(255,255,255,.55);border-radius:16px;padding:6px 12px;font-size:14px;line-height:1.35}
+  #hud-theme{font-size:11px;opacity:.94;font-weight:700}
+  #hud-stars{font-size:16px}
+  #hud-right{text-align:right}
+  #hud-score{font-size:16px}
+  #hud-hearts{font-size:15px;letter-spacing:1px}
+  #bar{margin-top:4px;width:min(38vw,220px);height:9px;border-radius:9px;overflow:hidden;
+    background:rgba(0,0,0,.22);border:1.5px solid rgba(255,255,255,.6)}
+  #bar-fill{display:block;height:100%;width:100%;border-radius:9px;
+    background:linear-gradient(90deg,#7ef29d,#ffe066,#ff9f68);transition:width .2s linear}
+  #hud-powers{display:flex;gap:6px;margin-top:5px;justify-content:center;font-size:13px;min-height:18px}
+  .pw{background:rgba(255,255,255,.34);border:1.5px solid rgba(255,255,255,.65);border-radius:10px;padding:0 7px}
+
+  /* ---------- 按钮 ---------- */
+  .icon-btn{position:fixed;z-index:25;width:46px;height:46px;border-radius:50%;border:3px solid rgba(255,255,255,.85);
+    background:rgba(255,255,255,.3);color:#fff;font-size:20px;line-height:1;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    text-shadow:0 1px 2px rgba(0,0,0,.25);box-shadow:0 6px 16px rgba(0,0,0,.22);
+    backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);transition:transform .12s}
+  .icon-btn:active{transform:scale(.9)}
+  #b-pause{right:14px;bottom:calc(14px + env(safe-area-inset-bottom))}
+  #b-mute{left:14px;bottom:calc(14px + env(safe-area-inset-bottom))}
+  .icon-btn.hide{display:none}
+  #stick{position:fixed;z-index:22;bottom:calc(20px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);
+    display:none;gap:14px}
+  #stick.on{display:flex}
+  .pad{width:76px;height:76px;border-radius:50%;border:4px solid rgba(255,255,255,.8);
+    background:rgba(255,255,255,.28);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+    color:#fff;font-size:30px;display:flex;align-items:center;justify-content:center;
+    box-shadow:0 8px 20px rgba(0,0,0,.22);cursor:pointer}
+  .pad:active{transform:scale(.92)}
+
+  /* ---------- 覆盖层 ---------- */
+  #overlay{position:fixed;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;
+    padding:20px;background:radial-gradient(120% 100% at 50% 0%,rgba(20,30,60,.30),rgba(10,14,32,.68));
+    backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
+  #overlay.hide{display:none}
+  .card{width:min(94vw,520px);max-height:92vh;overflow:auto;text-align:center;
+    background:linear-gradient(180deg,#ffffff,#f4f9ff);
+    border:5px solid #fff;border-radius:30px;padding:22px 20px 20px;
+    box-shadow:0 18px 50px rgba(10,20,50,.45),inset 0 0 0 4px #e7f1ff;
+    animation:pop .34s cubic-bezier(.2,1.4,.4,1)}
+  @keyframes pop{0%{transform:scale(.86) translateY(14px);opacity:0}100%{transform:scale(1) translateY(0);opacity:1}}
+  .card h1{font-size:clamp(22px,6.4vw,31px);color:#2b3a67;letter-spacing:1px;line-height:1.25}
+  .card .sub{margin-top:8px;color:#5d6b96;font-size:clamp(12px,3.5vw,15px);font-weight:700;line-height:1.55}
+  .emoji-row{font-size:clamp(30px,9vw,44px);letter-spacing:4px;margin:6px 0 2px}
+  .btn-row{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:16px}
+  button.big{border:none;cursor:pointer;font-weight:900;color:#fff;
+    font-family:inherit;font-size:clamp(15px,4.3vw,18px);
+    padding:14px 24px;border-radius:22px;min-width:140px;
+    box-shadow:0 7px 0 rgba(0,0,0,.16),0 10px 22px rgba(0,0,0,.18);
+    transition:transform .1s}
+  button.big:active{transform:translateY(4px);box-shadow:0 3px 0 rgba(0,0,0,.16)}
+  .b-green{background:linear-gradient(180deg,#7ee787,#39c46a)}
+  .b-blue{background:linear-gradient(180deg,#79c8ff,#2f8fe6)}
+  .b-pink{background:linear-gradient(180deg,#ffa7cf,#ef5da8)}
+  .b-grey{background:linear-gradient(180deg,#c3cbe0,#8d99b8)}
+  .badge{display:inline-block;margin-top:10px;background:#fff3c4;color:#8a6d1f;border:2px solid #ffd93d;
+    border-radius:14px;padding:4px 12px;font-size:13px;font-weight:900}
+  .levels{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:14px}
+  .lv{border-radius:14px;padding:8px 2px;font-size:12px;font-weight:900;color:#2b3a67;
+    background:#eaf3ff;border:2.5px solid #cfe4ff;line-height:1.3}
+  .lv.on{background:#fff3c4;border-color:#ffd93d}
+  .lv.lock{opacity:.42}
+  .tips{margin-top:14px;text-align:left;display:inline-block;color:#4a5880;font-size:13px;font-weight:700;line-height:1.9}
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+<div id="loading">🧊 正在搭建 3D 乐园…</div>
+
+<div id="hud" class="hide">
+  <div class="hud-box">
+    <div id="hud-level">第 1 关</div>
+    <div id="hud-theme">绿野花园</div>
+  </div>
+  <div class="hud-box" style="text-align:center">
+    <div id="hud-stars">⭐ 0 / 6</div>
+    <div id="bar"><i id="bar-fill"></i></div>
+    <div id="hud-powers"></div>
+  </div>
+  <div class="hud-box" id="hud-right">
+    <div id="hud-score">0</div>
+    <div id="hud-hearts">❤️❤️❤️</div>
+  </div>
+</div>
+
+<div id="stick">
+  <button class="pad" id="pad-l">◀</button>
+  <button class="pad" id="pad-r">▶</button>
+</div>
+<button id="b-pause" class="icon-btn hide">⏸</button>
+<button id="b-mute"  class="icon-btn hide">🔊</button>
+
+<div id="overlay"></div>
+
+<script type="importmap">
+{ "imports": { "three": "./vendor/three.module.min.js" } }
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+
+/* =========================================================================
+   彩虹小兔大冒险 3D · Rainbow Bunny Adventure 3D
+   three.js (WebGL) 儿童向卡通 3D 游戏 · 10 个关口
+   性能策略：LOW_PERF 检测 / DPR 限制 / 几何与材质复用 / 对象池 /
+             阴影按设备降级 / 粒子共用单一 Points
+   ========================================================================= */
+
+/* ------------------------------------------------------------ 0. 基础 */
+const cvs = document.getElementById('game');
+const TAU = Math.PI * 2;
+let W = 0, H = 0;
+
+/* ------------------------------------------------- 1. 性能与设备检测 */
+const LOW_PERF = /Android|iPhone|iPad|iPod|Mobile|Silk|Kindle/i.test(navigator.userAgent) ||
+                 (navigator.hardwareConcurrency || 8) <= 4;
+const MAX_DPR   = LOW_PERF ? 1.35 : 2;
+const SHADOWS   = !LOW_PERF;
+const MAX_ITEMS = LOW_PERF ? 20 : 42;
+const MAX_PARTS = LOW_PERF ? 60 : 150;
+const PROP_SCALE= LOW_PERF ? 0.65 : 1;
+
+/* ----------------------------------------------------------- 2. 音频 */
+let actx = null, muted = false;
+function initAudio() {
+  if (actx) { if (actx.state === 'suspended') actx.resume(); return; }
+  try {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (AC) actx = new AC();
+  } catch (e) { actx = null; }
+}
+function tone(freq, dur, type, vol, slideTo, delay) {
+  if (!actx || muted) return;
+  type = type || 'sine'; vol = (vol == null ? 0.22 : vol);
+  const t0 = actx.currentTime + (delay || 0);
+  const o = actx.createOscillator(), g = actx.createGain();
+  o.type = type; o.frequency.setValueAtTime(freq, t0);
+  if (slideTo) o.frequency.exponentialRampToValueAtTime(Math.max(30, slideTo), t0 + dur);
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.exponentialRampToValueAtTime(vol, t0 + 0.014);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  o.connect(g); g.connect(actx.destination);
+  o.start(t0); o.stop(t0 + dur + 0.03);
+}
+function sfx(name) {
+  if (!actx || muted) return;
+  if (name === 'catch') tone(560, 0.10, 'triangle', 0.20, 880);
+  else if (name === 'star') { tone(720, 0.09, 'triangle', 0.20, 1100); tone(1080, 0.11, 'triangle', 0.15, 1500, 0.06); }
+  else if (name === 'heart') { tone(660, 0.10, 'sine', 0.20, 990); tone(990, 0.14, 'sine', 0.16, 1320, 0.08); }
+  else if (name === 'power') { tone(520, 0.09, 'square', 0.15, 780); tone(780, 0.09, 'square', 0.14, 1040, 0.07); tone(1040, 0.14, 'square', 0.13, 1400, 0.14); }
+  else if (name === 'hurt') tone(240, 0.16, 'sine', 0.18, 150);
+  else if (name === 'click') tone(700, 0.06, 'square', 0.13, 900);
+  else if (name === 'clear') [523, 659, 784, 1047].forEach((f, i) => tone(f, 0.20, 'triangle', 0.18, null, i * 0.10));
+  else if (name === 'win') [523, 659, 784, 1047, 1319, 1568].forEach((f, i) => tone(f, 0.26, 'triangle', 0.17, null, i * 0.11));
+  else if (name === 'fail') [440, 392, 330].forEach((f, i) => tone(f, 0.24, 'sine', 0.16, null, i * 0.14));
+}
+
+/* ------------------------------------------------- 3. 关卡与主题配置 */
+const THEME_EMOJI = { meadow: '🌱', beach: '🏖️', candy: '🍬', ocean: '🐠', night: '🌙', snow: '❄️', sky: '☁️', forest: '🍄', sakura: '🌸', castle: '🏰' };
+const THEME_NAMES = { meadow: '绿野花园', beach: '阳光沙滩', candy: '甜蜜糖果园', ocean: '蔚蓝海洋', night: '星空夜晚', snow: '雪花乐园', sky: '彩虹天空', forest: '魔法森林', sakura: '樱花山谷', castle: '彩虹城堡' };
+const THEME_CYCLE = ['meadow', 'beach', 'candy', 'ocean', 'night', 'snow', 'sky', 'forest', 'sakura', 'castle'];
+const LEVELS = (function () {
+  const arr = [];
+  for (let i = 0; i < 50; i++) {
+    const cycle = Math.floor(i / 10);
+    const theme = THEME_CYCLE[i % 10];
+    const goal = Math.min(16, 6 + Math.floor(i * 0.22));       // 6 → 16
+    const dur = 50 + Math.min(8, cycle * 2);                    // 50 → 58
+    arr.push({ name: THEME_NAMES[theme], theme: theme, goal: goal, dur: dur, boss: (i === 49) });
+  }
+  return arr;
+})();
+const FRAG_COLORS = ['#ff5a5f', '#ff9f43', '#ffd93d', '#5ad46b', '#4a9dff', '#a06bff', '#ff6bd6'];
+
+const THEMES = {
+  meadow: { sky: ['#7fd4ff', '#eafaff'], ground: '#7ed957', path: '#a6ec8a', fog: '#d6f0ff', props: 'meadow', fruit: 0xff5a5f, night: false },
+  beach:  { sky: ['#7fd4ff', '#fff6d0'], ground: '#ffe0a3', path: '#fff0c9', fog: '#e6f6ff', props: 'beach',  fruit: 0xff8c42, night: false },
+  candy:  { sky: ['#ffc9ec', '#fff4fb'], ground: '#ffb3de', path: '#ffd9ef', fog: '#ffe6f6', props: 'candy',  fruit: 0xff4f9a, night: false },
+  ocean:  { sky: ['#2f9fd8', '#a9e9ff'], ground: '#ffe9b0', path: '#fff3cf', fog: '#8fd8f5', props: 'ocean',  fruit: 0xff7ab8, night: false },
+  night:  { sky: ['#101a3c', '#43569c'], ground: '#3d4a80', path: '#5566a3', fog: '#28325e', props: 'night',  fruit: 0xff6b9d, night: true  },
+  snow:   { sky: ['#bfe2ff', '#ffffff'], ground: '#ffffff', path: '#e8f4ff', fog: '#e8f4ff', props: 'snow',   fruit: 0x7cb8ff, night: false },
+  sky:    { sky: ['#8fd0ff', '#ffeaf3'], ground: '#cdefff', path: '#e6f7ff', fog: '#dceeff', props: 'sky',    fruit: 0xff9f43, night: false },
+  forest: { sky: ['#a8e6bb', '#eaffd6'], ground: '#4f9e5a', path: '#63b26e', fog: '#cfeecf', props: 'forest', fruit: 0xc084fc, night: false },
+  sakura: { sky: ['#ffd6e8', '#fff8fb'], ground: '#ffc9dd', path: '#ffe0ec', fog: '#ffe4ef', props: 'sakura', fruit: 0xff7aa8, night: false },
+  castle: { sky: ['#ffd08a', '#ffeec2'], ground: '#b9a7ff', path: '#c9bcff', fog: '#ffe0c2', props: 'castle', fruit: 0xffd93d, night: false }
+};
+
+/* ------------------------------------------------------- 4. 渲染器 */
+let renderer, scene, camera, hemiLight, dirLight, skyMesh, levelGroup, clock;
+let PLAY_HALF = 8.0;        // 左右活动半宽（按视口自适应）
+const CATCH_Y   = 1.5;        // 接住判定高度
+const CATCH_DX  = 0.9;       // 接住判定水平半径
+
+function bootRenderer() {
+  renderer = new THREE.WebGLRenderer({ canvas: cvs, antialias: !LOW_PERF, powerPreference: 'high-performance' });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, MAX_DPR));
+  renderer.setSize(window.innerWidth, window.innerHeight, false);
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  if (SHADOWS) {
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  }
+  scene = new THREE.Scene();
+  camera = new THREE.PerspectiveCamera(48, window.innerWidth / window.innerHeight, 0.1, 260);
+  camera.position.set(0, 8.6, 13.6);
+  camera.lookAt(0, 1.5, 0);
+
+  hemiLight = new THREE.HemisphereLight(0xffffff, 0x9fd8a0, 1.05);
+  scene.add(hemiLight);
+  dirLight = new THREE.DirectionalLight(0xffffff, 1.35);
+  dirLight.position.set(7, 16, 9);
+  if (SHADOWS) {
+    dirLight.castShadow = true;
+    dirLight.shadow.mapSize.set(LOW_PERF ? 512 : 1024, LOW_PERF ? 512 : 1024);
+    dirLight.shadow.camera.left = -14; dirLight.shadow.camera.right = 14;
+    dirLight.shadow.camera.top = 16;   dirLight.shadow.camera.bottom = -6;
+    dirLight.shadow.camera.near = 1;   dirLight.shadow.camera.far = 50;
+    dirLight.shadow.bias = -0.0015;
+  }
+  scene.add(dirLight);
+  scene.add(new THREE.AmbientLight(0xffffff, 0.32));
+  clock = new THREE.Clock();
+}
+
+/* --------------------------------------------------- 5. 尺寸 / 视口 */
+function onResize() {
+  W = Math.max(320, window.innerWidth);
+  H = Math.max(360, window.innerHeight);
+  camera.aspect = W / H;
+  camera.updateProjectionMatrix();
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, MAX_DPR));
+  renderer.setSize(W, H, false);
+}
+
+/* ------------------------------------------------------- 6. 工具函数 */
+const geoCache = new Map();
+const matCache = new Map();
+function geo(key, make) {
+  let g = geoCache.get(key);
+  if (!g) { g = make(); geoCache.set(key, g); }
+  return g;
+}
+function toon(color, opts) {
+  const o = opts || {};
+  const key = 't' + color + '|' + (o.emissive || 0) + '|' + (o.opacity == null ? 1 : o.opacity) + '|' + (o.flat ? 1 : 0) + '|' + (o.side || 0);
+  let m = matCache.get(key);
+  if (!m) {
+    m = new THREE.MeshToonMaterial({
+      color: color,
+      emissive: o.emissive || 0x000000,
+      transparent: o.opacity != null && o.opacity < 1,
+      opacity: o.opacity == null ? 1 : o.opacity,
+      side: o.side || THREE.FrontSide
+    });
+    if (o.flat) m.flatShading = true;
+    matCache.set(key, m);
+  }
+  return m;
+}
+function basic(color, opts) {
+  const o = opts || {};
+  const key = 'b' + color + '|' + (o.opacity == null ? 1 : o.opacity) + '|' + (o.side || 0);
+  let m = matCache.get(key);
+  if (!m) {
+    m = new THREE.MeshBasicMaterial({
+      color: color,
+      transparent: o.opacity != null && o.opacity < 1,
+      opacity: o.opacity == null ? 1 : o.opacity,
+      side: o.side || THREE.FrontSide
+    });
+    matCache.set(key, m);
+  }
+  return m;
+}
+function mesh(g, m, x, y, z) {
+  const o = new THREE.Mesh(g, m);
+  o.position.set(x || 0, y || 0, z || 0);
+  if (SHADOWS) { o.castShadow = true; o.receiveShadow = true; }
+  return o;
+}
+function sph(r, w, h) { return geo('s' + r + '_' + (w || 12) + '_' + (h || 10), () => new THREE.SphereGeometry(r, w || 12, h || 10)); }
+function capsule(r, len) { return geo('c' + r + '_' + len, () => new THREE.CapsuleGeometry(r, len, 4, 10)); }
+function boxG(w, h, d) { return geo('x' + w + '_' + h + '_' + d, () => new THREE.BoxGeometry(w, h, d)); }
+function cyl(rt, rb, h, s) { return geo('y' + rt + '_' + rb + '_' + h + '_' + (s || 10), () => new THREE.CylinderGeometry(rt, rb, h, s || 10)); }
+function cone(r, h, s) { return geo('k' + r + '_' + h + '_' + (s || 12), () => new THREE.ConeGeometry(r, h, s || 12)); }
+function torus(R, t, rs, ts, arc) { return geo('o' + R + '_' + t + '_' + rs + '_' + ts + '_' + arc, () => new THREE.TorusGeometry(R, t, rs, ts, arc)); }
+function dode(r) { return geo('d' + r, () => new THREE.DodecahedronGeometry(r)); }
+function octa(r) { return geo('e' + r, () => new THREE.OctahedronGeometry(r)); }
+function icosa(r) { return geo('i' + r, () => new THREE.IcosahedronGeometry(r)); }
+
+/* --------------------------------------------------- 7. 天空与地面 */
+function makeSky(theme) {
+  const c = document.createElement('canvas');
+  c.width = 16; c.height = 256;
+  const g = c.getContext('2d');
+  const grd = g.createLinearGradient(0, 0, 0, 256);
+  grd.addColorStop(0, theme.sky[0]);
+  grd.addColorStop(0.62, theme.sky[1]);
+  grd.addColorStop(1, theme.sky[1]);
+  g.fillStyle = grd; g.fillRect(0, 0, 16, 256);
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  const m = new THREE.MeshBasicMaterial({ map: tex, side: THREE.BackSide, depthWrite: false, fog: false });
+  const sk = new THREE.Mesh(new THREE.SphereGeometry(120, 18, 14), m);
+  sk.position.y = 6;
+  return sk;
+}
+function makeGround(theme) {
+  const gp = new THREE.Group();
+  const base = new THREE.Mesh(new THREE.PlaneGeometry(120, 120), toon(theme.ground));
+  base.rotation.x = -Math.PI / 2;
+  base.receiveShadow = SHADOWS;
+  gp.add(base);
+  const strip = new THREE.Mesh(new THREE.PlaneGeometry(PLAY_HALF * 2 + 1.2, 34), toon(theme.path));
+  strip.rotation.x = -Math.PI / 2;
+  strip.position.set(0, 0.012, -6);
+  gp.add(strip);
+  return gp;
+}
+function makeHills(theme, color, count) {
+  const gp = new THREE.Group();
+  for (let i = 0; i < count; i++) {
+    const r = 9 + (i % 3) * 3.5;
+    const h = sph(r, 12, 8);
+    const m = mesh(h, toon(color), -22 + i * (44 / Math.max(1, count - 1)), -r * 0.55, -26 - (i % 2) * 6);
+    m.scale.set(1.5, 0.62, 1);
+    m.castShadow = false; m.receiveShadow = false;
+    gp.add(m);
+  }
+  return gp;
+}
+
+/* ------------------------------------------------------- 8. 道具构件 */
+function addTree(gp, x, z, s, leafColor) {
+  const g = new THREE.Group();
+  g.add(mesh(cyl(0.16, 0.24, 1.5, 8), toon(0x9a6b3f), 0, 0.75, 0));
+  const lm = toon(leafColor || 0x58c45f);
+  g.add(mesh(sph(0.85, 10, 8), lm, 0, 1.95, 0));
+  g.add(mesh(sph(0.62, 10, 8), lm, -0.62, 1.62, 0.18));
+  g.add(mesh(sph(0.58, 10, 8), lm, 0.6, 1.72, -0.16));
+  g.add(mesh(sph(0.5, 10, 8), lm, 0.05, 2.5, 0.05));
+  g.position.set(x, 0, z); g.scale.setScalar(s);
+  gp.add(g); return g;
+}
+function addPine(gp, x, z, s, color) {
+  const g = new THREE.Group();
+  const cm = toon(color || 0x2f7a45);
+  g.add(mesh(cyl(0.14, 0.2, 0.7, 8), toon(0x7a5230), 0, 0.35, 0));
+  g.add(mesh(cone(1.15, 1.5, 10), cm, 0, 1.35, 0));
+  g.add(mesh(cone(0.9, 1.35, 10), cm, 0, 2.15, 0));
+  g.add(mesh(cone(0.62, 1.2, 10), cm, 0, 2.9, 0));
+  g.position.set(x, 0, z); g.scale.setScalar(s);
+  gp.add(g); return g;
+}
+function addFlower(gp, x, z, s, color) {
+  const g = new THREE.Group();
+  g.add(mesh(cyl(0.035, 0.045, 0.55, 6), toon(0x4aa84f), 0, 0.275, 0));
+  const pm = toon(color);
+  for (let i = 0; i < 5; i++) {
+    const a = i * TAU / 5;
+    const p = mesh(sph(0.11, 8, 6), pm, Math.cos(a) * 0.12, 0.58, Math.sin(a) * 0.12);
+    p.scale.set(1, 0.55, 1);
+    g.add(p);
+  }
+  g.add(mesh(sph(0.075, 8, 6), toon(0xffe066), 0, 0.60, 0));
+  g.position.set(x, 0, z); g.scale.setScalar(s);
+  gp.add(g); return g;
+}
+function addMushroom(gp, x, z, s, capColor) {
+  const g = new THREE.Group();
+  g.add(mesh(cyl(0.14, 0.19, 0.42, 8), toon(0xfff4e0), 0, 0.21, 0));
+  const cap = mesh(sph(0.4, 10, 8, 0), toon(capColor), 0, 0.44, 0);
+  cap.geometry = sphereDome(0.4);
+  g.add(cap);
+  const dm = toon(0xffffff);
+  g.add(mesh(sph(0.07, 8, 6), dm, -0.17, 0.55, 0.1));
+  g.add(mesh(sph(0.055, 8, 6), dm, 0.16, 0.5, -0.13));
+  g.position.set(x, 0, z); g.scale.setScalar(s);
+  gp.add(g); return g;
+}
+function sphereDome(r) {
+  return geo('dome' + r, () => new THREE.SphereGeometry(r, 12, 8, 0, TAU, 0, Math.PI / 2));
+}
+function addLollipop(gp, x, z, s, color) {
+  const g = new THREE.Group();
+  g.add(mesh(cyl(0.07, 0.07, 1.7, 8), toon(0xffffff), 0, 0.85, 0));
+  g.add(mesh(sph(0.46, 12, 10), toon(color), 0, 1.95, 0));
+  const sw = mesh(torus(0.3, 0.09, 6, 14, TAU), toon(0xffffff), 0, 1.95, 0);
+  g.add(sw);
+  g.position.set(x, 0, z); g.scale.setScalar(s);
+  gp.add(g); return g;
+}
+function addGumdrop(gp, x, z, s, color) {
+  const m = mesh(cone(0.42, 0.85, 12), toon(color), x, 0.42, z);
+  gp.add(m); return m;
+}
+function addPalm(gp, x, z, s) {
+  const g = new THREE.Group();
+  const trunk = mesh(cyl(0.12, 0.2, 2.6, 8), toon(0xa9713f), 0, 1.3, 0);
+  trunk.rotation.z = 0.16;
+  g.add(trunk);
+  const lm = toon(0x3fae62);
+  for (let i = 0; i < 5; i++) {
+    const a = i * TAU / 5;
+    const leaf = mesh(sph(0.62, 8, 6), lm, Math.cos(a) * 0.75 + 0.22, 2.62, Math.sin(a) * 0.75);
+    leaf.scale.set(1.5, 0.3, 0.7);
+    leaf.rotation.y = -a;
+    leaf.rotation.z = -0.28;
+    g.add(leaf);
+  }
+  g.add(mesh(sph(0.14, 8, 6), toon(0x7a5230), 0.2, 2.5, 0.12));
+  g.position.set(x, 0, z); g.scale.setScalar(s);
+  gp.add(g); return g;
+}
+function addSnowman(gp, x, z, s) {
+  const g = new THREE.Group();
+  const w = toon(0xffffff);
+  g.add(mesh(sph(0.62, 12, 10), w, 0, 0.62, 0));
+  g.add(mesh(sph(0.46, 12, 10), w, 0, 1.5, 0));
+  g.add(mesh(sph(0.33, 12, 10), w, 0, 2.18, 0));
+  g.add(mesh(cone(0.09, 0.32, 6), toon(0xff9f43), 0, 2.16, 0.32));
+  const d = toon(0x3a3550);
+  g.add(mesh(sph(0.05, 6, 6), d, -0.12, 2.26, 0.29));
+  g.add(mesh(sph(0.05, 6, 6), d, 0.12, 2.26, 0.29));
+  g.add(mesh(cyl(0.36, 0.36, 0.1, 12), toon(0xff5a5f), 0, 2.52, 0));
+  g.add(mesh(cyl(0.2, 0.24, 0.3, 12), toon(0xff5a5f), 0, 2.7, 0));
+  g.position.set(x, 0, z); g.scale.setScalar(s);
+  gp.add(g); return g;
+}
+function addCloud(gp, x, y, z, s, dr) {
+  const g = new THREE.Group();
+  const m = toon(0xffffff);
+  g.add(mesh(sph(0.85, 10, 8), m, 0, 0, 0));
+  g.add(mesh(sph(0.62, 10, 8), m, 0.85, 0.12, 0));
+  g.add(mesh(sph(0.55, 10, 8), m, -0.8, 0.06, 0.1));
+  g.add(mesh(sph(0.5, 10, 8), m, 0.15, 0.5, -0.1));
+  g.position.set(x, y, z); g.scale.setScalar(s);
+  gp.add(g);
+  if (dr) drifters.push({ o: g, sp: 0.35 + Math.random() * 0.45, min: -26, max: 26 });
+  return g;
+}
+function addRainbow(gp, x, y, z, R) {
+  const g = new THREE.Group();
+  const cols = [0xff5a5f, 0xff9f43, 0xffd93d, 0x5ad46b, 0x4a9dff, 0xa06bff];
+  for (let i = 0; i < cols.length; i++) {
+    const r = R - i * (R * 0.115);
+    const t = mesh(torus(r, R * 0.055, 6, 22, Math.PI), basic(cols[i]), 0, 0, 0);
+    t.castShadow = false; t.receiveShadow = false;
+    g.add(t);
+  }
+  g.position.set(x, y, z);
+  gp.add(g); return g;
+}
+function addCastle(gp, x, z, s) {
+  const g = new THREE.Group();
+  const wall = toon(0xf6e8ff), roof = toon(0x8f7ae8), door = toon(0x7a5fd8), gold = toon(0xffd93d);
+  g.add(mesh(boxG(7.2, 4.2, 3.2), wall, 0, 2.1, 0));
+  g.add(mesh(boxG(2.2, 6.4, 2.6), wall, -3.3, 3.2, 0));
+  g.add(mesh(boxG(2.2, 6.4, 2.6), wall, 3.3, 3.2, 0));
+  g.add(mesh(boxG(3.0, 8.4, 3.0), wall, 0, 4.2, 0));
+  g.add(mesh(cone(1.5, 2.2, 4), roof, 0, 9.5, 0));
+  g.add(mesh(cone(1.1, 1.7, 4), roof, -3.3, 7.2, 0));
+  g.add(mesh(cone(1.1, 1.7, 4), roof, 3.3, 7.2, 0));
+  const dr = mesh(cyl(0.9, 0.9, 2.6, 12), door, 0, 1.3, 1.6);
+  dr.scale.set(1, 1, 0.35);
+  g.add(dr);
+  for (const px of [-2.2, 0, 2.2]) {
+    const pole = mesh(cyl(0.05, 0.05, 1.6, 6), toon(0xffffff), px, 9.6 + (px === 0 ? 1.4 : 0), 0);
+    g.add(pole);
+    const flag = mesh(boxG(0.9, 0.55, 0.05), gold, px + 0.45, 10.2 + (px === 0 ? 1.4 : 0), 0);
+    g.add(flag);
+  }
+  g.position.set(x, 0, z); g.scale.setScalar(s);
+  gp.add(g); return g;
+}
+function addCherry(gp, x, z, s) {
+  const g = new THREE.Group();
+  g.add(mesh(cyl(0.2, 0.3, 2.1, 8), toon(0xa9713f), 0, 1.05, 0));
+  const pm = toon(0xffb7d1);
+  g.add(mesh(sph(1.15, 10, 8), pm, 0, 2.6, 0));
+  g.add(mesh(sph(0.85, 10, 8), pm, -1.0, 2.25, 0.2));
+  g.add(mesh(sph(0.8, 10, 8), pm, 0.95, 2.35, -0.2));
+  g.add(mesh(sph(0.7, 10, 8), pm, 0.1, 3.35, 0.15));
+  g.position.set(x, 0, z); g.scale.setScalar(s);
+  gp.add(g); return g;
+}
+function addSeaweed(gp, x, z, s, color) {
+  const g = new THREE.Group();
+  const m = toon(color || 0x2fbf71);
+  for (let i = -1; i <= 1; i++) {
+    const b = mesh(cyl(0.05, 0.11, 1.7, 6), m, i * 0.3, 0.85, 0);
+    b.rotation.z = i * 0.2;
+    g.add(b);
+  }
+  g.position.set(x, 0, z); g.scale.setScalar(s);
+  gp.add(g); return g;
+}
+function addRock(gp, x, z, s, color) {
+  const m = mesh(dode(0.55), toon(color || 0x9aa4b8, { flat: true }), x, 0.4, z);
+  m.rotation.set(Math.random(), Math.random() * TAU, Math.random() * 0.4);
+  m.scale.set(s, s * 0.75, s);
+  gp.add(m); return m;
+}
+function addBall(gp, x, z, s, color) {
+  const g = new THREE.Group();
+  const m = mesh(sph(0.55, 12, 10), toon(color), 0, 0.55, 0);
+  g.add(m);
+  const w = mesh(torus(0.555, 0.07, 6, 16, TAU), toon(0xffffff), 0, 0.55, 0);
+  w.rotation.x = Math.PI / 2.6;
+  g.add(w);
+  g.position.set(x, 0, z); g.scale.setScalar(s);
+  gp.add(g); return g;
+}
+
+/* ------------------------------------------------- 9. 主题场景搭建 */
+let drifters = [], floaters = [];
+function clearLevelScene() {
+  if (levelGroup) {
+    while (levelGroup.children.length) levelGroup.remove(levelGroup.children[0]);
+    scene.remove(levelGroup);
+    levelGroup = null;
+  }
+  drifters = []; floaters = [];
+}
+function buildLevelScene(themeKey) {
+  const th = THEMES[themeKey];
+  clearLevelScene();
+  if (skyMesh) {
+    scene.remove(skyMesh);
+    if (skyMesh.material.map) skyMesh.material.map.dispose();
+    skyMesh.material.dispose();
+    skyMesh.geometry.dispose();
+  }
+  skyMesh = makeSky(th);
+  scene.add(skyMesh);
+  scene.fog = new THREE.Fog(th.fog, 30, 86);
+  hemiLight.color.set(0xffffff);
+  hemiLight.groundColor.set(th.night ? 0x22305c : 0x9fd8a0);
+  hemiLight.intensity = th.night ? 0.60 : 1.05;
+  dirLight.intensity = th.night ? 0.50 : 1.35;
+  dirLight.color.set(th.night ? 0x9fb6ff : 0xffffff);
+
+  levelGroup = new THREE.Group();
+  scene.add(levelGroup);
+  levelGroup.add(makeGround(th));
+  const P = th.props, gp = levelGroup;
+  const rnd = mulberry(themeKey.length * 977 + 13);
+
+  if (P === 'meadow') {
+    levelGroup.add(makeHills(th, 0x8fe07a, 4));
+    for (let i = 0; i < 7 * PROP_SCALE; i++) addTree(gp, -17 + rnd() * 34, -7 - rnd() * 11, 0.85 + rnd() * 0.5, 0x58c45f);
+    for (let i = 0; i < 10 * PROP_SCALE; i++) addFlower(gp, -8 + rnd() * 16, rnd() * 3.4, 0.85 + rnd() * 0.4, [0xff8fb1, 0xffd93d, 0xa78bfa, 0xffffff][i % 4]);
+  } else if (P === 'beach') {
+    const sea = new THREE.Mesh(new THREE.PlaneGeometry(120, 46), toon(0x4fc3f7));
+    sea.rotation.x = -Math.PI / 2;
+    sea.position.set(0, 0.02, -30);
+    gp.add(sea);
+    const foam = new THREE.Mesh(new THREE.PlaneGeometry(120, 1.6), toon(0xffffff));
+    foam.rotation.x = -Math.PI / 2;
+    foam.position.set(0, 0.03, -7.2);
+    gp.add(foam);
+    addPalm(gp, -6.4, -3.0, 1.0);
+    addPalm(gp, 6.8, -4.2, 0.88);
+    addBall(gp, 4.6, 1.4, 0.9, 0xff8c42);
+    for (let i = 0; i < 6 * PROP_SCALE; i++) addRock(gp, -7 + rnd() * 14, -5 + rnd() * 6, 0.3 + rnd() * 0.3, 0xf0d9a8);
+  } else if (P === 'candy') {
+    for (let i = 0; i < 6 * PROP_SCALE; i++) addLollipop(gp, -12 + rnd() * 24, -4 - rnd() * 10, 0.75 + rnd() * 0.5, [0xff5fa2, 0x4a9dff, 0xffd93d, 0x7ee787][i % 4]);
+    for (let i = 0; i < 10 * PROP_SCALE; i++) addGumdrop(gp, -8 + rnd() * 16, -3 + rnd() * 5, 0.75 + rnd() * 0.5, [0xff8ecb, 0xffd93d, 0x7ee787, 0xa78bfa][i % 4]);
+  } else if (P === 'ocean') {
+    for (let i = 0; i < 9 * PROP_SCALE; i++) addSeaweed(gp, -9 + rnd() * 18, -4 - rnd() * 12, 0.8 + rnd() * 0.7, [0x2fbf71, 0x39d68a, 0x1f9e5c][i % 3]);
+    for (let i = 0; i < 5 * PROP_SCALE; i++) addRock(gp, -8 + rnd() * 16, -2 + rnd() * 4, 0.4 + rnd() * 0.4, 0x9fd8e8);
+    for (let i = 0; i < 6; i++) {
+      const f = new THREE.Group();
+      f.add(mesh(sph(0.34, 8, 6), toon([0xff9f43, 0xff6b9d, 0x4a9dff][i % 3]), 0, 0, 0));
+      const tail = mesh(cone(0.26, 0.5, 6), toon([0xff9f43, 0xff6b9d, 0x4a9dff][i % 3]), -0.55, 0, 0);
+      tail.rotation.z = Math.PI / 2;
+      f.add(tail);
+      f.position.set(-9 + rnd() * 18, 3.4 + rnd() * 4.5, -6 - rnd() * 9);
+      f.scale.setScalar(0.85 + rnd() * 0.5);
+      gp.add(f);
+      floaters.push({ o: f, k: 'fish', ph: rnd() * TAU, y0: f.position.y, x0: f.position.x });
+    }
+  } else if (P === 'night') {
+    levelGroup.add(makeHills(th, 0x2a3462, 4));
+    const moon = mesh(sph(2.2, 16, 12), basic(0xfff8d6), 15, 12, -30);
+    moon.castShadow = false; moon.receiveShadow = false;
+    gp.add(moon);
+    const starN = LOW_PERF ? 120 : 300, pos = new Float32Array(starN * 3);
+    for (let i = 0; i < starN; i++) {
+      pos[i * 3] = -55 + Math.random() * 110;
+      pos[i * 3 + 1] = 6 + Math.random() * 42;
+      pos[i * 3 + 2] = -28 - Math.random() * 40;
+    }
+    const sg = new THREE.BufferGeometry();
+    sg.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    const stars = new THREE.Points(sg, new THREE.PointsMaterial({ color: 0xffffff, size: 0.5, sizeAttenuation: true, transparent: true, opacity: 0.95, fog: false }));
+    gp.add(stars);
+    for (let i = 0; i < 8 * PROP_SCALE; i++) addPine(gp, -16 + rnd() * 32, -8 - rnd() * 12, 0.9 + rnd() * 0.6, 0x1f4f30);
+    for (let i = 0; i < 9; i++) {
+      const f = mesh(sph(0.11, 6, 6), basic(0xfff3a8), -8 + rnd() * 16, 1.6 + rnd() * 3.4, -3 - rnd() * 8);
+      f.castShadow = false; f.receiveShadow = false;
+      gp.add(f);
+      floaters.push({ o: f, k: 'fly', ph: rnd() * TAU, y0: f.position.y, x0: f.position.x });
+    }
+  } else if (P === 'snow') {
+    levelGroup.add(makeHills(th, 0xe8f4ff, 4));
+    for (let i = 0; i < 9 * PROP_SCALE; i++) addPine(gp, -17 + rnd() * 34, -7 - rnd() * 12, 0.9 + rnd() * 0.7, [0x3f7d4e, 0x356e44][i % 2]);
+    addSnowman(gp, -4.6, -3.4, 1.0);
+    addSnowman(gp, 5.6, -5.0, 0.78);
+  } else if (P === 'sky') {
+    addRainbow(gp, 0, 0.6, -22, 11);
+    for (let i = 0; i < 4; i++) addCloud(gp, -18 + i * 12, 7 + (i % 2) * 2.4, -14 - (i % 3) * 5, 1.3 + (i % 2) * 0.4, true);
+    for (let i = 0; i < 5; i++) addCloud(gp, -14 + i * 7, 2.6 + (i % 2) * 1.4, 1.5 + (i % 3) * 2.2, 0.6, false);
+  } else if (P === 'forest') {
+    for (let i = 0; i < 12 * PROP_SCALE; i++) addPine(gp, -18 + rnd() * 36, -6 - rnd() * 13, 1.0 + rnd() * 0.9, [0x2f7a45, 0x35864c][i % 2]);
+    for (let i = 0; i < 9 * PROP_SCALE; i++) addMushroom(gp, -8 + rnd() * 16, -2.5 + rnd() * 5.5, 0.85 + rnd() * 0.7, [0xc084fc, 0xff8fb1, 0x7ee787][i % 3]);
+    for (let i = 0; i < 8; i++) {
+      const f = mesh(sph(0.12, 6, 6), basic(0xd9ff8f), -8 + rnd() * 16, 1.4 + rnd() * 3.0, -3 - rnd() * 7);
+      f.castShadow = false; f.receiveShadow = false;
+      gp.add(f);
+      floaters.push({ o: f, k: 'fly', ph: rnd() * TAU, y0: f.position.y, x0: f.position.x });
+    }
+  } else if (P === 'sakura') {
+    for (let i = 0; i < 7 * PROP_SCALE; i++) addCherry(gp, -17 + rnd() * 34, -7 - rnd() * 12, 0.85 + rnd() * 0.5);
+    for (let i = 0; i < 8 * PROP_SCALE; i++) addFlower(gp, -8 + rnd() * 16, rnd() * 3.6, 0.8 + rnd() * 0.4, [0xff7aa8, 0xffffff, 0xffd93d][i % 3]);
+  } else if (P === 'castle') {
+    addCastle(gp, 0, -19, 1.0);
+    addRainbow(gp, 0, 0.5, -30, 13);
+    for (let i = 0; i < 4; i++) addCloud(gp, -18 + i * 12, 8 + (i % 2) * 2.2, -16 - (i % 3) * 5, 1.25, true);
+    for (let i = 0; i < 8 * PROP_SCALE; i++) addFlower(gp, -8 + rnd() * 16, rnd() * 3.6, 0.85 + rnd() * 0.5, [0xffd93d, 0xff8fb1, 0x7ee787][i % 3]);
+    for (let i = 0; i < 4; i++) addRock(gp, -7 + rnd() * 14, -3 + rnd() * 5, 0.35 + rnd() * 0.3, 0xc9bcff);
+  }
+  ambient = P === 'snow' ? 'snow' : (P === 'sakura' ? 'petal' : (P === 'ocean' ? 'bubble' : (P === 'candy' ? 'sparkle' : null)));
+}
+function mulberry(seed) {
+  let a = seed >>> 0;
+  return function () {
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/* ------------------------------------------------------- 10. 小兔子 */
+let bunny = null, bunnyBits = {};
+function makeBunny() {
+  const g = new THREE.Group();
+  const white = toon(0xfffdf7), pink = toon(0xffc2d8), dark = toon(0x3a3550), green = toon(0x5ad46b);
+
+  const shadow = new THREE.Mesh(new THREE.CircleGeometry(0.95, 20), new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.18, depthWrite: false }));
+  shadow.rotation.x = -Math.PI / 2;
+  shadow.position.y = 0.02;
+  g.add(shadow);
+  bunnyBits.shadow = shadow;
+
+  const body = mesh(sph(0.95, 16, 14), white, 0, 1.05, 0);
+  body.scale.set(1, 1.06, 0.94);
+  g.add(body); bunnyBits.body = body;
+
+  const head = mesh(sph(0.72, 18, 16), white, 0, 2.16, 0.06);
+  g.add(head); bunnyBits.head = head;
+
+  const earGeo = capsule(0.15, 0.62), innerGeo = capsule(0.075, 0.52);
+  const ears = [];
+  [-1, 1].forEach(function (s) {
+    const e = new THREE.Group();
+    e.add(mesh(earGeo, white, 0, 0, 0));
+    e.add(mesh(innerGeo, pink, 0, -0.02, 0.10));
+    e.position.set(s * 0.27, 2.92, -0.02);
+    e.rotation.z = s * 0.2;
+    g.add(e); ears.push(e);
+  });
+  bunnyBits.ears = ears;
+
+  const eyes = [], hl = [];
+  [-1, 1].forEach(function (s) {
+    const e = mesh(sph(0.105, 10, 10), dark, s * 0.26, 2.24, 0.60);
+    g.add(e); eyes.push(e);
+    const h = mesh(sph(0.037, 6, 6), toon(0xffffff), s * 0.23, 2.28, 0.69);
+    g.add(h); hl.push(h);
+  });
+  bunnyBits.eyes = eyes; bunnyBits.hl = hl;
+
+  [-1, 1].forEach(function (s) {
+    const c = mesh(sph(0.15, 10, 8), pink, s * 0.47, 2.02, 0.48);
+    c.scale.set(1, 1, 0.45);
+    g.add(c);
+  });
+  g.add(mesh(sph(0.075, 8, 8), pink, 0, 2.04, 0.71));
+
+  const mouth = mesh(torus(0.115, 0.028, 5, 12, Math.PI), dark, 0, 1.87, 0.66);
+  mouth.rotation.z = Math.PI;
+  g.add(mouth); bunnyBits.mouth = mouth;
+
+  [-1, 1].forEach(function (s) {
+    const f = mesh(sph(0.3, 12, 10), white, s * 0.44, 0.26, 0.18);
+    f.scale.set(1, 0.72, 1.25);
+    g.add(f);
+  });
+  g.add(mesh(sph(0.25, 10, 8), white, 0, 1.02, -0.88));
+
+  const leaf = mesh(sph(0.13, 8, 6), green, 0.16, 2.82, 0);
+  leaf.scale.set(1.5, 0.5, 0.8); leaf.rotation.z = -0.5;
+  g.add(leaf);
+  g.position.set(0, 0, 0);
+  return g;
+}
+
+/* --------------------------------------------------- 11. 掉落物预制 */
+const itemMasters = new Map();
+function starGeoOnce() {
+  return geo('starextrude', function () {
+    const s = new THREE.Shape();
+    const pts = 5, R = 0.46, r = 0.20;
+    for (let i = 0; i < pts * 2; i++) {
+      const rad = (i % 2 === 0) ? R : r;
+      const a = i * Math.PI / pts - Math.PI / 2;
+      const x = Math.cos(a) * rad, y = Math.sin(a) * rad;
+      if (i === 0) s.moveTo(x, y); else s.lineTo(x, y);
+    }
+    s.closePath();
+    const g = new THREE.ExtrudeGeometry(s, { depth: 0.18, bevelEnabled: true, bevelSize: 0.035, bevelThickness: 0.035, bevelSegments: 1, curveSegments: 1 });
+    g.center();
+    return g;
+  });
+}
+function shieldGeoOnce() {
+  return geo('shieldextrude', function () {
+    const s = new THREE.Shape();
+    s.moveTo(0, 0.5);
+    s.lineTo(0.42, 0.28);
+    s.lineTo(0.42, -0.1);
+    s.quadraticCurveTo(0, -0.62, -0.42, -0.1);
+    s.lineTo(-0.42, 0.28);
+    s.closePath();
+    const g = new THREE.ExtrudeGeometry(s, { depth: 0.18, bevelEnabled: true, bevelSize: 0.04, bevelThickness: 0.04, bevelSegments: 1, curveSegments: 4 });
+    g.center();
+    return g;
+  });
+}
+function makeMaster(kind, colorHex) {
+  const k = kind + (colorHex ? '#' + colorHex : '');
+  const cached = itemMasters.get(k);
+  if (cached) return cached;
+  let o;
+
+  if (kind === 'star') {
+    o = new THREE.Group();
+    o.add(mesh(starGeoOnce(), toon(0xffd93d, { emissive: 0x4a3200 }), 0, 0, 0));
+    const d = toon(0x3a3550);
+    [-1, 1].forEach(function (s) {
+      o.add(mesh(sph(0.045, 6, 6), d, s * 0.11, 0.05, 0.13));
+    });
+    const sm = mesh(torus(0.09, 0.022, 4, 10, Math.PI), d, 0, -0.04, 0.12);
+    sm.rotation.z = Math.PI;
+    o.add(sm);
+  } else if (kind === 'fruit') {
+    o = new THREE.Group();
+    o.add(mesh(sph(0.36, 14, 12), toon(colorHex || 0xff5a5f), 0, 0, 0));
+    o.add(mesh(cyl(0.045, 0.055, 0.2, 6), toon(0x7a4a2b), 0, 0.4, 0));
+    const leaf = mesh(sph(0.13, 8, 6), toon(0x59c94f), 0.13, 0.44, 0);
+    leaf.scale.set(1.5, 0.42, 0.85); leaf.rotation.z = -0.45;
+    o.add(leaf);
+  } else if (kind === 'heart') {
+    o = new THREE.Group();
+    const m = toon(0xff6b9d, { emissive: 0x3a0a1c });
+    o.add(mesh(sph(0.24, 12, 10), m, -0.17, 0.14, 0));
+    o.add(mesh(sph(0.24, 12, 10), m, 0.17, 0.14, 0));
+    const c = mesh(cone(0.34, 0.55, 12), m, 0, -0.16, 0);
+    c.rotation.z = Math.PI;
+    c.scale.set(1, 1, 0.75);
+    o.add(c);
+  } else if (kind === 'magnet') {
+    o = new THREE.Group();
+    const t = mesh(torus(0.3, 0.115, 8, 18, Math.PI), toon(0x4a7dff), 0, 0.06, 0);
+    t.rotation.z = Math.PI;
+    o.add(t);
+    o.add(mesh(boxG(0.23, 0.2, 0.23), toon(0xff5a5f), -0.3, -0.06, 0));
+    o.add(mesh(boxG(0.23, 0.2, 0.23), toon(0xff5a5f), 0.3, -0.06, 0));
+  } else if (kind === 'shield') {
+    o = new THREE.Group();
+    o.add(mesh(shieldGeoOnce(), toon(0x5ad1ff, { emissive: 0x0d3a52 }), 0, 0, 0));
+    const st = mesh(starGeoOnce(), toon(0xffffff), 0, 0.02, 0.14);
+    st.scale.setScalar(0.42);
+    o.add(st);
+  } else if (kind === 'rainbow') {
+    o = new THREE.Group();
+    const cols = [0xff5a5f, 0xff9f43, 0xffd93d, 0x5ad46b, 0x4a9dff, 0xa06bff];
+    for (let i = 0; i < cols.length; i++) {
+      const t = mesh(torus(0.42 - i * 0.048, 0.024, 5, 16, Math.PI), toon(cols[i], { emissive: cols[i] & 0x222222 }), 0, 0, 0);
+      o.add(t);
+    }
+    o.add(mesh(sph(0.1, 8, 6), toon(0xffffff), -0.36, -0.34, 0));
+    o.add(mesh(sph(0.1, 8, 6), toon(0xffffff), 0.36, -0.34, 0));
+  } else if (kind === 'rock') {
+    o = new THREE.Group();
+    const r = mesh(dode(0.4), toon(0x9aa4b8, { flat: true }), 0, 0, 0);
+    o.add(r);
+    const d = toon(0x3a3550);
+    [-1, 1].forEach(function (s) {
+      o.add(mesh(sph(0.042, 6, 6), d, s * 0.11, 0.06, 0.33));
+    });
+    const sm = mesh(torus(0.085, 0.02, 4, 10, Math.PI), d, 0, -0.02, 0.32);
+    sm.rotation.z = Math.PI;
+    o.add(sm);
+  } else if (kind === 'bee') {
+    o = new THREE.Group();
+    o.add(mesh(sph(0.3, 12, 10), toon(0xffd93d), 0, 0, 0));
+    const st = toon(0x4a4033);
+    [-0.12, 0.1].forEach(function (x) {
+      const s = mesh(torus(0.285, 0.045, 5, 14, TAU), st, x, 0, 0);
+      s.rotation.y = Math.PI / 2;
+      o.add(s);
+    });
+    [-1, 1].forEach(function (s) {
+      const w = mesh(sph(0.18, 8, 6), basic(0xdff2ff, { opacity: 0.8 }), s * 0.16, 0.22, -0.06);
+      w.scale.set(1, 0.25, 0.62);
+      o.add(w);
+    });
+    const d = toon(0x3a3550);
+    o.add(mesh(sph(0.05, 6, 6), d, -0.1, 0.08, 0.26));
+    o.add(mesh(sph(0.05, 6, 6), d, 0.1, 0.08, 0.26));
+    o.add(mesh(cyl(0.012, 0.012, 0.22, 4), d, -0.12, 0.34, 0));
+    o.add(mesh(cyl(0.012, 0.012, 0.22, 4), d, 0.12, 0.34, 0));
+  } else if (kind === 'seed') {
+    o = new THREE.Group();
+    o.add(mesh(icosa(0.28), toon(0xa9704a, { flat: true }), 0, 0, 0));
+    const sp = toon(0x8a5a3a);
+    for (let i = 0; i < 8; i++) {
+      const a = i * TAU / 8;
+      const c = mesh(cone(0.075, 0.28, 5), sp, Math.cos(a) * 0.3, 0, Math.sin(a) * 0.3);
+      c.rotation.z = -Math.cos(a) * 1.2;
+      c.rotation.x = Math.sin(a) * 1.2;
+      o.add(c);
+    }
+  } else if (kind === 'frag') {
+    o = new THREE.Group();
+    const inner = mesh(octa(0.34), toon(colorHex || 0xff5a5f, { emissive: 0x330a0a }), 0, 0, 0);
+    o.add(inner);
+    const outer = mesh(octa(0.44), basic(0xffffff, { opacity: 0.35 }), 0, 0, 0);
+    o.add(outer);
+  }
+  itemMasters.set(k, o);
+  return o;
+}
+function makeItem(kind, colorHex) { return makeMaster(kind, colorHex).clone(true); }
+
+/* --------------------------------------------------------- 12. 粒子 */
+const parts = [];
+let pointsMesh = null, pPos = null, pCol = null;
+function initParticles() {
+  pPos = new Float32Array(MAX_PARTS * 3);
+  pCol = new Float32Array(MAX_PARTS * 3);
+  for (let i = 0; i < MAX_PARTS; i++) { pPos[i * 3 + 1] = -999; }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+  g.setAttribute('color', new THREE.BufferAttribute(pCol, 3));
+  const m = new THREE.PointsMaterial({ size: 0.30, vertexColors: true, transparent: true, opacity: 0.98, sizeAttenuation: true, depthWrite: false });
+  pointsMesh = new THREE.Points(g, m);
+  pointsMesh.frustumCulled = false;
+  scene.add(pointsMesh);
+}
+const _tmpColor = new THREE.Color();
+function spawnBurst(x, y, z, colorHex, n, spread, up) {
+  for (let i = 0; i < n; i++) {
+    if (parts.length >= MAX_PARTS) break;
+    const a = Math.random() * TAU, b = (Math.random() - 0.3) * 1.4;
+    const sp = (0.5 + Math.random()) * (spread || 3.2);
+    parts.push({
+      x: x, y: y, z: z,
+      vx: Math.cos(a) * Math.cos(b) * sp,
+      vy: Math.abs(Math.sin(b)) * sp + (up || 2.4),
+      vz: Math.sin(a) * Math.cos(b) * sp,
+      t: 0, life: 0.55 + Math.random() * 0.5,
+      r: ((colorHex >> 16) & 255) / 255, g: ((colorHex >> 8) & 255) / 255, b: (colorHex & 255) / 255,
+      sz: 0.7 + Math.random() * 0.9
+    });
+  }
+}
+let ambient = null, ambientT = 0;
+function updateParticles(dt) {
+  for (let i = parts.length - 1; i >= 0; i--) {
+    const p = parts[i];
+    p.t += dt;
+    if (p.t >= p.life) { parts.splice(i, 1); continue; }
+    p.vy -= 7.5 * dt;
+    p.x += p.vx * dt; p.y += p.vy * dt; p.z += p.vz * dt;
+    p.vx *= 0.985; p.vz *= 0.985;
+  }
+  /* 环境粒子（单独预算，不挤占爆发粒子） */
+  if (ambient && (STATE === 'play' || STATE === 'intro') && parts.length < Math.floor(MAX_PARTS * 0.55)) {
+    ambientT -= dt;
+    if (ambientT <= 0) {
+      ambientT = 0.28;
+      const n = LOW_PERF ? 1 : 2;
+      for (let i = 0; i < n; i++) {
+        const x = -PLAY_HALF + Math.random() * PLAY_HALF * 2, z = -1.5 + Math.random() * 7;
+        if (ambient === 'snow') parts.push({ x: x, y: 12 + Math.random() * 3, z: z, vx: 0.3, vy: -2.2, vz: 0, t: 0, life: 3.6, r: 1, g: 1, b: 1 });
+        else if (ambient === 'petal') parts.push({ x: x, y: 11 + Math.random() * 4, z: z, vx: 0.55, vy: -1.8, vz: 0, t: 0, life: 3.6, r: 1, g: 0.72, b: 0.82 });
+        else if (ambient === 'bubble') parts.push({ x: x, y: -0.4, z: z, vx: 0, vy: 1.9, vz: 0, t: 0, life: 3.6, r: 0.85, g: 0.96, b: 1 });
+        else parts.push({ x: x, y: 1 + Math.random() * 7, z: z, vx: 0, vy: 0.5, vz: 0, t: 0, life: 2.4, r: 1, g: 1, b: 1 });
+      }
+    }
+  }
+  /* 写入缓冲 */
+  const cnt = Math.min(parts.length, MAX_PARTS);
+  for (let i = 0; i < MAX_PARTS; i++) {
+    if (i < cnt) {
+      const p = parts[i];
+      pPos[i * 3] = p.x; pPos[i * 3 + 1] = p.y; pPos[i * 3 + 2] = p.z;
+      pCol[i * 3] = p.r; pCol[i * 3 + 1] = p.g; pCol[i * 3 + 2] = p.b;
+    } else {
+      pPos[i * 3 + 1] = -999;
+    }
+  }
+  pointsMesh.geometry.attributes.position.needsUpdate = true;
+  pointsMesh.geometry.attributes.color.needsUpdate = true;
+}
+
+/* --------------------------------------------------- 13. 游戏状态 */
+let STATE = 'title';
+let curLevel = 0, starsGot = 0, fragsGot = 0, score = 0, timeLeft = 0;
+let best = 0, unlocked = 0;
+let introT = 0, lastHUD = '', spawnTimer = 0, fragTimer = 0;
+const keys = { left: false, right: false };
+const player = { x: 0, tx: 0, hearts: 3, invul: 0, hurt: 0, squash: 0, hop: 0, magnet: 0, shield: 0, dbl: 0, vx: 0 };
+let items = [];
+let bossObj = null, bossBits = {};
+let gameT = 0;
+
+/* --------------------------------------------------- 14. Boss 乌云 */
+function makeBoss() {
+  const g = new THREE.Group();
+  const cloud = toon(0xc8d4ea), cloud2 = toon(0xaab8d4);
+  g.add(mesh(sph(2.2, 14, 12), cloud2, -2.2, 0, 0));
+  g.add(mesh(sph(2.2, 14, 12), cloud2, 2.2, 0, 0));
+  g.add(mesh(sph(2.9, 16, 14), cloud, 0, 0.5, 0));
+  g.add(mesh(sph(2.3, 14, 12), cloud, -1.9, 1.0, 0.3));
+  g.add(mesh(sph(2.3, 14, 12), cloud, 1.9, 1.0, 0.3));
+  const dark = toon(0x3a3550);
+  const eyes = [];
+  [-1, 1].forEach(function (s) {
+    const e = mesh(sph(0.34, 10, 10), dark, s * 1.1, 0.7, 2.9);
+    g.add(e); eyes.push(e);
+    const h = mesh(sph(0.12, 6, 6), toon(0xffffff), s * 1.0, 0.82, 3.15);
+    g.add(h);
+  });
+  const browL = mesh(boxG(1.1, 0.18, 0.18), dark, -1.1, 1.45, 2.95);
+  const browR = mesh(boxG(1.1, 0.18, 0.18), dark, 1.1, 1.45, 2.95);
+  browL.rotation.z = -0.42; browR.rotation.z = 0.42;
+  g.add(browL); g.add(browR);
+  const mouth = mesh(torus(0.55, 0.11, 6, 14, Math.PI), dark, 0, -0.9, 2.85);
+  g.add(mouth);
+  bossBits.eyes = eyes; bossBits.brows = [browL, browR]; bossBits.mouth = mouth;
+  g.position.set(0, 7.5, -4);
+  return g;
+}
+function bossSetHappy() {
+  if (!bossObj) return;
+  bossObj.children.forEach(function (c) {
+    if (c.material && c.material.color && c.material.color.getHex() === 0xc8d4ea) c.material = toon(0xffffff);
+    if (c.material && c.material.color && c.material.color.getHex() === 0xaab8d4) c.material = toon(0xeaf3ff);
+  });
+  bossBits.brows.forEach(function (b) { b.visible = false; });
+  bossBits.mouth.rotation.z = Math.PI;
+  bossBits.mouth.position.y = -0.75;
+}
+function updateBoss(dt) {
+  if (!bossObj) return;
+  gameT += 0;
+  bossObj.position.x = Math.sin(gameT * 0.55) * PLAY_HALF * 0.62;
+  bossObj.position.y = 7.5 + Math.sin(gameT * 1.1) * 0.35;
+  bossObj.rotation.z = Math.sin(gameT * 0.55 + 1.2) * 0.06;
+}
+
+/* ------------------------------------------------ 15. 生成与碰撞 */
+function spawnItem(kind, opt) {
+  opt = opt || {};
+  if (items.length >= MAX_ITEMS) return;
+  const th = THEMES[LEVELS[curLevel].theme];
+  const diff = curLevel / (LEVELS.length - 1);
+  const x = opt.x != null ? opt.x : (-PLAY_HALF + Math.random() * (PLAY_HALF * 2));
+  const baseV = 4.6 + 3.4 * diff;
+  const o = makeItem(kind, kind === 'fruit' ? th.fruit : (opt.color || 0xffffff));
+  o.position.set(x, opt.y != null ? opt.y : 13, -0.4 + Math.random() * 1.6);
+  scene.add(o);
+  const it = {
+    kind: kind, obj: o,
+    x: o.position.x, y: o.position.y, z: o.position.z,
+    vx: 0, vy: baseV * (0.92 + Math.random() * 0.26),
+    r: 0.55, ph: Math.random() * TAU
+  };
+  if (kind === 'bee') { it.vx = (Math.random() < 0.5 ? -1 : 1) * (1.6 + 1.3 * diff); }
+  else if (kind === 'rock') { it.vy *= 1.18; }
+  else if (kind === 'frag') { it.vy = 4.2 + 2.0 * diff; }
+  else if (kind === 'heart') { it.vy *= 0.9; }
+  items.push(it);
+}
+function pickGoodie() {
+  const r = Math.random();
+  if (r < 0.42) return 'star';
+  if (r < 0.84) return 'fruit';
+  if (r < 0.91) return 'heart';
+  return ['magnet', 'shield', 'rainbow'][(Math.random() * 3) | 0];
+}
+function updateSpawn(dt) {
+  const lv = LEVELS[curLevel], diff = curLevel / (LEVELS.length - 1);
+  spawnTimer -= dt;
+  if (spawnTimer <= 0) {
+    spawnTimer = Math.max(0.32, (0.88 - 0.34 * diff) * (0.82 + Math.random() * 0.36));
+    const hazardChance = lv.boss ? 0.44 : (0.17 + 0.30 * diff);
+    if (Math.random() < hazardChance) {
+      const hr = Math.random();
+      spawnItem(hr < 0.55 ? 'rock' : (hr < 0.86 ? 'bee' : 'seed'));
+    } else {
+      spawnItem(pickGoodie());
+    }
+  }
+  if (lv.boss) {
+    fragTimer -= dt;
+    if (fragTimer <= 0 && fragsGot < FRAG_COLORS.length) {
+      fragTimer = 3.0 + Math.random() * 1.6;
+      const c = parseInt(FRAG_COLORS[Math.min(fragsGot, 6)].slice(1), 16);
+      spawnItem('frag', { color: c });
+    }
+    if (Math.random() < dt * 0.55 && bossObj) {
+      spawnItem('rock', { x: bossObj.position.x, y: 5.6 });
+    }
+  }
+}
+function applyPower(kind) {
+  if (kind === 'magnet') player.magnet = 7;
+  else if (kind === 'shield') player.shield = 7;
+  else player.dbl = 9;
+  sfx('power');
+  spawnBurst(player.x, 2.2, 0, 0xffe066, 16, 3.2, 3.4);
+}
+function hitHazard(it) {
+  if (player.shield > 0) {
+    player.shield = 0;
+    spawnBurst(it.x, it.y, it.z, 0x5ad1ff, 18, 3.6, 3.0);
+    sfx('power');
+    return;
+  }
+  if (player.invul > 0) return;
+  player.hearts--;
+  player.invul = 1.35;
+  player.hurt = 0.5;
+  spawnBurst(it.x, it.y, it.z, 0xc9d3e8, 14, 3.2, 3.0);
+  sfx('hurt');
+  updateHUD(true);
+  if (player.hearts <= 0) failLevel();
+}
+function collect(it) {
+  const mult = player.dbl > 0 ? 2 : 1;
+  const th = THEMES[LEVELS[curLevel].theme];
+  if (it.kind === 'star') {
+    starsGot++; score += 10 * mult;
+    spawnBurst(it.x, it.y, it.z, 0xffd93d, 18, 3.4, 3.2);
+    player.squash = 1; player.hop = 0.55;
+    sfx('star'); updateHUD(true);
+    if (starsGot >= LEVELS[curLevel].goal && !LEVELS[curLevel].boss) clearLevel();
+  } else if (it.kind === 'fruit') {
+    score += 10 * mult;
+    spawnBurst(it.x, it.y, it.z, th.fruit, 14, 3.0, 3.0);
+    player.squash = 1; sfx('catch'); updateHUD(true);
+  } else if (it.kind === 'heart') {
+    if (player.hearts < 3) player.hearts++;
+    score += 5 * mult;
+    spawnBurst(it.x, it.y, it.z, 0xff6b9d, 18, 3.2, 3.2);
+    sfx('heart'); updateHUD(true);
+  } else if (it.kind === 'frag') {
+    fragsGot++;
+    const c = parseInt(FRAG_COLORS[Math.max(0, fragsGot - 1)].slice(1), 16);
+    spawnBurst(it.x, it.y, it.z, c, 24, 4.0, 3.6);
+    sfx('star'); updateHUD(true);
+    if (fragsGot >= FRAG_COLORS.length) winGame();
+  } else {
+    applyPower(it.kind);
+  }
+}
+function updateItems(dt) {
+  for (let i = items.length - 1; i >= 0; i--) {
+    const it = items[i];
+    it.ph += dt * 3.0;
+    it.y -= it.vy * dt;
+    it.x += it.vx * dt;
+    if (it.kind === 'bee') it.x += Math.sin(it.ph * 1.4) * 1.7 * dt * 3;
+    if (it.x < -PLAY_HALF - 0.4) { it.x = -PLAY_HALF - 0.4; it.vx = Math.abs(it.vx); }
+    if (it.x > PLAY_HALF + 0.4) { it.x = PLAY_HALF + 0.4; it.vx = -Math.abs(it.vx); }
+    if (player.magnet > 0 && (it.kind === 'star' || it.kind === 'fruit' || it.kind === 'heart' || it.kind === 'frag')) {
+      const dx = player.x - it.x, dy = 1.7 - it.y;
+      const d = Math.sqrt(dx * dx + dy * dy) || 1;
+      if (d < 5.5) { it.x += dx / d * 6.5 * dt; it.y += dy / d * 6.5 * dt; }
+    }
+    it.obj.position.set(it.x, it.y, it.z);
+    it.obj.rotation.y += dt * 1.4;
+    if (it.kind === 'bee') it.obj.rotation.z = Math.sin(it.ph * 1.5) * 0.22;
+    else if (it.kind === 'seed') it.obj.rotation.x += dt * 2.4;
+
+    const hitY = (it.y < CATCH_Y + 0.85 && it.y > CATCH_Y - 1.35);
+    const hitX = Math.abs(it.x - player.x) < (CATCH_DX + it.r * 0.35);
+    if (hitY && hitX) {
+      if (it.kind === 'rock' || it.kind === 'bee' || it.kind === 'seed') hitHazard(it);
+      else collect(it);
+      scene.remove(it.obj);
+      items.splice(i, 1);
+      continue;
+    }
+    if (it.y < -1.5) {
+      scene.remove(it.obj);
+      items.splice(i, 1);
+    }
+  }
+}
+function clearItems() {
+  for (let i = 0; i < items.length; i++) scene.remove(items[i].obj);
+  items = [];
+}
+
+/* --------------------------------------------------- 16. 玩家更新 */
+function updatePlayer(dt) {
+  const sp = 11.5 * dt;
+  if (keys.left) player.tx -= sp;
+  if (keys.right) player.tx += sp;
+  player.tx = Math.max(-PLAY_HALF, Math.min(PLAY_HALF, player.tx));
+  const k = 1 - Math.exp(-13 * dt);
+  player.vx = (player.tx - player.x) * 13;
+  player.x += (player.tx - player.x) * k;
+  player.x = Math.max(-PLAY_HALF, Math.min(PLAY_HALF, player.x));
+  if (player.invul > 0) player.invul -= dt;
+  if (player.hurt > 0) player.hurt -= dt;
+  if (player.squash > 0) player.squash -= dt * 3.4;
+  if (player.hop > 0) player.hop -= dt * 4.2;
+  if (player.magnet > 0) player.magnet -= dt;
+  if (player.shield > 0) player.shield -= dt;
+  if (player.dbl > 0) player.dbl -= dt;
+}
+function animateBunny(t) {
+  if (!bunny) return;
+  const hopY = player.hop > 0 ? Math.sin(player.hop * Math.PI) * 0.55 : 0;
+  const sq = 1 + Math.max(0, player.squash) * 0.10;
+  bunny.position.set(player.x, hopY, 0);
+  const BS = 0.58;   // 主角尺寸（与画面比例协调）
+  bunny.scale.set(sq * BS, (1 / sq) * BS, sq * BS);
+  bunny.rotation.z = Math.max(-0.22, Math.min(0.22, -player.vx * 0.028));
+  const wig = Math.sin(t * 0.0035) * 0.055 + (player.hop > 0 ? Math.sin(player.hop * Math.PI) * 0.22 : 0);
+  bunnyBits.ears[0].rotation.z = 0.2 + wig;
+  bunnyBits.ears[1].rotation.z = -0.2 - wig;
+  bunnyBits.ears[0].rotation.x = bunnyBits.ears[1].rotation.x = Math.sin(t * 0.0022) * 0.05;
+  const blink = (Math.floor(t / 130) % 34 === 0);
+  bunnyBits.eyes.forEach(function (e) { e.scale.y = blink ? 0.12 : 1; });
+  bunnyBits.hl.forEach(function (e) { e.visible = !blink; });
+  const sad = player.hurt > 0;
+  bunnyBits.mouth.rotation.z = sad ? 0 : Math.PI;
+  bunnyBits.mouth.position.y = sad ? 1.79 : 1.87;
+  bunnyBits.shadow.visible = !SHADOWS;
+  const flick = (player.invul > 0 && STATE === 'play') ? (Math.floor(t / 90) % 2 === 0) : false;
+  bunny.visible = !flick;
+}
+
+/* ------------------------------------------------------- 17. 视口适配 */
+function applyLayout() {
+  const aspect = W / H;
+  const vFov = 48 * Math.PI / 180;
+  const targetV = Math.max(9.5, Math.min(16, H / 28));
+  const dist = targetV / (2 * Math.tan(vFov / 2));
+  camera.fov = 48;
+  camera.position.set(0, dist * 0.55, dist * 0.86);
+  camera.lookAt(0, 1.5, 0);
+  camera.updateProjectionMatrix();
+  const halfW = Math.tan(vFov / 2) * dist * aspect;
+  const oldHalf = PLAY_HALF;
+  PLAY_HALF = Math.max(2.9, Math.min(8.0, halfW - 0.8));
+  if (Math.abs(PLAY_HALF - oldHalf) > 0.35 && STATE !== 'title') buildLevelScene(LEVELS[curLevel].theme);
+  player.x = Math.max(-PLAY_HALF, Math.min(PLAY_HALF, player.x));
+  player.tx = Math.max(-PLAY_HALF, Math.min(PLAY_HALF, player.tx));
+}
+
+/* --------------------------------------------------------- 18. UI */
+const elHud = document.getElementById('hud');
+const elOverlay = document.getElementById('overlay');
+const elPause = document.getElementById('b-pause');
+const elMute = document.getElementById('b-mute');
+const elLevel = document.getElementById('hud-level');
+const elTheme = document.getElementById('hud-theme');
+const elStars = document.getElementById('hud-stars');
+const elScore = document.getElementById('hud-score');
+const elHearts = document.getElementById('hud-hearts');
+const elBar = document.getElementById('bar-fill');
+const elPowers = document.getElementById('hud-powers');
+const elStick = document.getElementById('stick');
+
+function loadSave() {
+  try {
+    const a = localStorage.getItem('rb3_best'); if (a) best = parseInt(a, 10) || 0;
+    const b = localStorage.getItem('rb3_unlocked'); if (b) unlocked = Math.max(0, Math.min(LEVELS.length - 1, parseInt(b, 10) || 0));
+  } catch (e) {}
+}
+function saveSave() {
+  try {
+    localStorage.setItem('rb3_best', String(best | 0));
+    localStorage.setItem('rb3_unlocked', String(unlocked | 0));
+  } catch (e) {}
+}
+function updateHUD(force) {
+  const lv = LEVELS[curLevel];
+  const sig = curLevel + '|' + starsGot + '|' + score + '|' + player.hearts + '|' + Math.ceil(timeLeft) + '|' +
+              Math.ceil(player.magnet) + '|' + Math.ceil(player.shield) + '|' + Math.ceil(player.dbl) + '|' + fragsGot + '|' + best;
+  if (!force && sig === lastHUD) return;
+  lastHUD = sig;
+  elLevel.textContent = '第 ' + (curLevel + 1) + ' 关';
+  elTheme.textContent = lv.name + ' 3D';
+  elStars.textContent = lv.boss ? ('🌈 ' + fragsGot + ' / ' + FRAG_COLORS.length) : ('⭐ ' + starsGot + ' / ' + lv.goal);
+  elScore.textContent = '分数 ' + score;
+  let hs = '';
+  for (let i = 0; i < 3; i++) hs += (i < player.hearts ? '❤️' : '🤍');
+  elHearts.textContent = hs;
+  elBar.style.width = (lv.boss ? 100 : Math.min(100, starsGot / lv.goal * 100)) + '%';
+  let pw = '';
+  if (player.magnet > 0) pw += '<span class="pw">🧲' + Math.ceil(player.magnet) + '</span>';
+  if (player.shield > 0) pw += '<span class="pw">🛡️' + Math.ceil(player.shield) + '</span>';
+  if (player.dbl > 0)    pw += '<span class="pw">✨x2 ' + Math.ceil(player.dbl) + '</span>';
+  if (best > 0)          pw += '<span class="pw">🏆' + best + '</span>';
+  elPowers.innerHTML = pw;
+}
+function showOverlay(html) { elOverlay.innerHTML = html; elOverlay.classList.remove('hide'); }
+function hideOverlay() { elOverlay.classList.add('hide'); elOverlay.innerHTML = ''; }
+function setHud(v) { if (v) elHud.classList.remove('hide'); else elHud.classList.add('hide'); }
+function setBtns(v) {
+  if (v) { elPause.classList.remove('hide'); elMute.classList.remove('hide'); }
+  else { elPause.classList.add('hide'); elMute.classList.add('hide'); }
+  if (TOUCH) elStick.classList.toggle('on', v);
+}
+const TOUCH = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+function levelChips() {
+  let h = '<div class="levels">';
+  for (let i = 0; i < LEVELS.length; i++) {
+    const cls = 'lv' + (i <= unlocked ? ' on' : ' lock');
+    h += '<div class="' + cls + '">' + (i + 1) + '<br>' + LEVELS[i].name.slice(0, 4) + '</div>';
+  }
+  return h + '</div>';
+}
+function showTitle() {
+  STATE = 'title';
+  clearItems();
+  setHud(false); setBtns(false);
+  const canContinue = unlocked > 0;
+  showOverlay(
+    '<div class="card">' +
+      '<div class="emoji-row">🐰🌈⭐</div>' +
+      '<h1>彩虹小兔大冒险 3D</h1>' +
+      '<div class="sub">10 个 3D 彩色卡通乐园等你探索<br>接住 ⭐ 星星 和果子，躲开小石头和小蜜蜂</div>' +
+      '<div class="badge">最高分 ' + best + ' · 已解锁 ' + (unlocked + 1) + '/' + LEVELS.length + ' 关</div>' +
+      levelChips() +
+      '<div class="tips">🎮 玩法<br>📱 手机：按住屏幕左右滑动 / 底部方向键<br>⌨️ 电脑：← → 或 A D 键<br>⭐ 收集星星填满进度条就能过关<br>❤️ 有 3 颗爱心，被撞到会少一颗</div>' +
+      '<div class="btn-row">' +
+        '<button class="big b-green" id="b-start" data-a="start">开始游戏</button>' +
+        (canContinue ? '<button class="big b-blue" data-a="continue">继续第 ' + (unlocked + 1) + ' 关</button>' : '') +
+        '<button class="big b-pink" id="b-mute2" data-a="mute">' + (muted ? '🔇 静音中' : '🔊 音效开') + '</button>' +
+      '</div>' +
+    '</div>');
+}
+function showIntro(lv) {
+  curLevel = Math.max(0, Math.min(LEVELS.length - 1, lv));
+  STATE = 'intro'; introT = 1.5;
+  clearItems();
+  const L = LEVELS[curLevel];
+  const emoji = THEME_EMOJI[LEVELS[curLevel].theme] || '⭐';
+  setHud(false); setBtns(false);
+  buildLevelScene(L.theme);
+  showOverlay(
+    '<div class="card">' +
+      '<div class="emoji-row">' + emoji + '</div>' +
+      '<h1>第 ' + (curLevel + 1) + ' 关 · ' + L.name + '</h1>' +
+      '<div class="sub">' + (L.boss ? '集齐 7 块彩虹碎片，让乌云怪开心起来！' : '目标：收集 ' + L.goal + ' 颗 ⭐ 星星') +
+        '<br>时长 ' + L.dur + ' 秒 · 爱心 3 颗</div>' +
+      '<div class="btn-row"><button class="big b-green" id="b-start" data-a="go">开始挑战</button></div>' +
+    '</div>');
+}
+function beginPlay(lv) {
+  curLevel = lv;
+  const L = LEVELS[lv];
+  STATE = 'play';
+  starsGot = 0; fragsGot = 0; timeLeft = L.dur;
+  spawnTimer = 0.7; fragTimer = 1.6;
+  clearItems();
+  player.hearts = 3; player.invul = 1.0; player.hurt = 0; player.squash = 0; player.hop = 0;
+  player.magnet = 0; player.shield = 0; player.dbl = 0;
+  player.x = 0; player.tx = 0; player.vx = 0;
+  if (!levelGroup || levelGroup.userData.theme !== L.theme) buildLevelScene(L.theme);
+  levelGroup.userData.theme = L.theme;
+  if (L.boss) {
+    if (!bossObj) { bossObj = makeBoss(); scene.add(bossObj); }
+    bossObj.visible = true;
+    bossObj.children.forEach(function (c) {
+      if (c.material && c.material.color && c.material.color.getHex() === 0xffffff) c.material = toon(0xc8d4ea);
+      if (c.material && c.material.color && c.material.color.getHex() === 0xeaf3ff) c.material = toon(0xaab8d4);
+    });
+    bossBits.brows.forEach(function (b) { b.visible = true; });
+    bossBits.mouth.rotation.z = 0; bossBits.mouth.position.y = -0.9;
+  } else if (bossObj) {
+    bossObj.visible = false;
+  }
+  ambient = ['snow', 'sakura', 'ocean', 'candy'].indexOf(L.theme) >= 0 ? (L.theme === 'snow' ? 'snow' : L.theme === 'sakura' ? 'petal' : L.theme === 'ocean' ? 'bubble' : 'sparkle') : null;
+  hideOverlay(); setHud(true); setBtns(true);
+  lastHUD = ''; updateHUD(true);
+}
+function clearLevel() {
+  if (STATE !== 'play') return;
+  STATE = 'clear';
+  score += 50;
+  sfx('clear');
+  for (let i = 0; i < 4; i++) spawnBurst((i - 1.5) * PLAY_HALF * 0.4, 3.4, 0, [0xffd93d, 0xff6b9d, 0x5ad1ff, 0x7ee787][i], 20, 4.4, 4.6);
+  setBtns(false);
+  if (unlocked < curLevel + 1) unlocked = Math.min(LEVELS.length - 1, curLevel + 1);
+  if (score > best) best = score;
+  saveSave();
+  const isLast = curLevel >= LEVELS.length - 1;
+  showOverlay(
+    '<div class="card">' +
+      '<div class="emoji-row">🎉⭐🎈</div>' +
+      '<h1>过关啦！</h1>' +
+      '<div class="sub">第 ' + (curLevel + 1) + ' 关 · ' + LEVELS[curLevel].name + ' 完成<br>星星 ' + starsGot + ' 颗 · 总分 ' + score + '</div>' +
+      '<div class="btn-row">' +
+        (isLast ? '<button class="big b-green" data-a="win">看看结局</button>'
+                : '<button class="big b-green" id="b-next" data-a="next">下一关 ▶</button>') +
+        '<button class="big b-grey" data-a="title">回到主页</button>' +
+      '</div>' +
+    '</div>');
+}
+function failLevel() {
+  if (STATE !== 'play') return;
+  STATE = 'fail';
+  sfx('fail');
+  setBtns(false);
+  const reason = player.hearts <= 0 ? '爱心用完啦' : '时间到啦';
+  showOverlay(
+    '<div class="card">' +
+      '<div class="emoji-row">🐰💧</div>' +
+      '<h1>再试一次吧</h1>' +
+      '<div class="sub">' + reason + '<br>第 ' + (curLevel + 1) + ' 关 · ' + LEVELS[curLevel].name + ' · 已收集 ⭐' + starsGot + '/' + LEVELS[curLevel].goal + '</div>' +
+      '<div class="btn-row">' +
+        '<button class="big b-green" id="b-retry" data-a="retry">重新挑战</button>' +
+        '<button class="big b-grey" data-a="title">回到主页</button>' +
+      '</div>' +
+    '</div>');
+}
+function winGame() {
+  if (STATE !== 'play' && STATE !== 'clear') return;
+  STATE = 'win';
+  bossSetHappy();
+  score += 200;
+  if (score > best) best = score;
+  unlocked = LEVELS.length - 1; saveSave();
+  sfx('win');
+  for (let i = 0; i < 7; i++) spawnBurst((i - 3) * 2.0, 4 + (i % 3), 0, parseInt(FRAG_COLORS[i % 7].slice(1), 16), 22, 4.6, 5.0);
+  setBtns(false);
+  showOverlay(
+    '<div class="card">' +
+      '<div class="emoji-row">🌈🐰🏰</div>' +
+      '<h1>恭喜通关！</h1>' +
+      '<div class="sub">乌云怪变成了彩虹云，天空又亮起来了！<br>10 个 3D 乐园全部完成 · 总分 ' + score + '<br>最高分 ' + best + '</div>' +
+      '<div class="btn-row">' +
+        '<button class="big b-green" data-a="restart">再玩一次</button>' +
+        '<button class="big b-grey" data-a="title">回到主页</button>' +
+      '</div>' +
+    '</div>');
+}
+function togglePause() {
+  if (STATE === 'play') {
+    STATE = 'pause';
+    setBtns(false);
+    showOverlay(
+      '<div class="card">' +
+        '<div class="emoji-row">🐰⏸️</div>' +
+        '<h1>休息一下</h1>' +
+        '<div class="sub">第 ' + (curLevel + 1) + ' 关 · ' + LEVELS[curLevel].name + '</div>' +
+        '<div class="btn-row">' +
+          '<button class="big b-green" id="b-resume" data-a="resume">继续玩</button>' +
+          '<button class="big b-grey" data-a="title">回到主页</button>' +
+        '</div>' +
+      '</div>');
+  } else if (STATE === 'pause') {
+    STATE = 'play'; hideOverlay(); setBtns(true);
+  }
+}
+
+/* --------------------------------------------------------- 19. 输入 */
+const _ray = new THREE.Raycaster();
+const _ndc = new THREE.Vector2();
+const _plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -CATCH_Y);
+const _hit = new THREE.Vector3();
+function screenToWorldX(clientX) {
+  const r = cvs.getBoundingClientRect();
+  _ndc.x = ((clientX - r.left) / r.width) * 2 - 1;
+  _ndc.y = 0;
+  _ray.setFromCamera(_ndc, camera);
+  if (_ray.ray.intersectPlane(_plane, _hit)) return _hit.x;
+  return player.tx;
+}
+let dragging = false;
+function onDown(cx) { if (STATE !== 'play') return; dragging = true; player.tx = screenToWorldX(cx); }
+function onMove(cx) { if (!dragging || STATE !== 'play') return; player.tx = screenToWorldX(cx); }
+function onUp() { dragging = false; }
+
+cvs.addEventListener('pointerdown', function (e) { e.preventDefault(); initAudio(); onDown(e.clientX); }, { passive: false });
+cvs.addEventListener('pointermove', function (e) {
+  if (e.pointerType === 'mouse' && STATE === 'play') { player.tx = screenToWorldX(e.clientX); return; }
+  if (dragging) onMove(e.clientX);
+}, { passive: true });
+cvs.addEventListener('pointerup', onUp);
+cvs.addEventListener('pointercancel', onUp);
+cvs.addEventListener('pointerleave', onUp);
+window.addEventListener('mouseup', onUp);
+
+function bindPad(id, dir) {
+  const el = document.getElementById(id);
+  const on = function (e) { e.preventDefault(); initAudio(); keys[dir] = true; };
+  const off = function (e) { e.preventDefault(); keys[dir] = false; };
+  el.addEventListener('pointerdown', on, { passive: false });
+  el.addEventListener('pointerup', off, { passive: false });
+  el.addEventListener('pointerleave', off, { passive: false });
+  el.addEventListener('pointercancel', off, { passive: false });
+}
+bindPad('pad-l', 'left');
+bindPad('pad-r', 'right');
+
+window.addEventListener('keydown', function (e) {
+  const k = e.key;
+  if (k === 'ArrowLeft' || k === 'a' || k === 'A') { keys.left = true; e.preventDefault(); }
+  if (k === 'ArrowRight' || k === 'd' || k === 'D') { keys.right = true; e.preventDefault(); }
+  if (k === ' ' || k === 'p' || k === 'P') { togglePause(); e.preventDefault(); }
+  if (k === 'r' || k === 'R') { if (STATE === 'play' || STATE === 'pause' || STATE === 'fail' || STATE === 'clear') { hideOverlay(); setBtns(true); beginPlay(curLevel); } }
+  if (k === 'm' || k === 'M') toggleMute();
+});
+window.addEventListener('keyup', function (e) {
+  const k = e.key;
+  if (k === 'ArrowLeft' || k === 'a' || k === 'A') keys.left = false;
+  if (k === 'ArrowRight' || k === 'd' || k === 'D') keys.right = false;
+});
+function toggleMute() {
+  muted = !muted;
+  elMute.textContent = muted ? '🔇' : '🔊';
+  if (!muted) sfx('click');
+  const m2 = document.getElementById('b-mute2');
+  if (m2) m2.textContent = muted ? '🔇 静音中' : '🔊 音效开';
+}
+elPause.addEventListener('click', function () { initAudio(); sfx('click'); togglePause(); });
+elMute.addEventListener('click', function () { initAudio(); toggleMute(); });
+elOverlay.addEventListener('click', function (e) {
+  const t = e.target;
+  if (!t || !t.closest) return;
+  const b = t.closest('[data-a]');
+  if (!b) return;
+  const a = b.getAttribute('data-a');
+  initAudio(); sfx('click');
+  if (a === 'start') { unlocked = unlocked || 0; score = 0; showIntro(0); }
+  else if (a === 'continue') showIntro(Math.min(unlocked, LEVELS.length - 1));
+  else if (a === 'go') beginPlay(curLevel);
+  else if (a === 'next') showIntro(Math.min(curLevel + 1, LEVELS.length - 1));
+  else if (a === 'retry') beginPlay(curLevel);
+  else if (a === 'resume') togglePause();
+  else if (a === 'title') showTitle();
+  else if (a === 'mute') toggleMute();
+  else if (a === 'restart') { score = 0; showIntro(0); }
+  else if (a === 'win') winGame();
+});
+document.addEventListener('visibilitychange', function () { if (document.hidden && STATE === 'play') togglePause(); });
+window.addEventListener('resize', function () { onResize(); applyLayout(); });
+window.addEventListener('orientationchange', function () { setTimeout(function () { onResize(); applyLayout(); }, 220); });
+
+/* --------------------------------------------------------- 20. 主循环 */
+let last = 0;
+function frame(now) {
+  requestAnimationFrame(frame);
+  if (!last) last = now;
+  let dt = (now - last) / 1000; last = now;
+  if (dt > 0.05) dt = 0.05;
+  if (dt < 0) dt = 0;
+  gameT += dt;
+
+  if (STATE === 'intro') {
+    introT -= dt;
+    if (introT <= 0) beginPlay(curLevel);
+  }
+  if (STATE === 'play') {
+    timeLeft -= dt;
+    if (timeLeft <= 0) { timeLeft = 0; updateHUD(true); failLevel(); }
+    else {
+      updatePlayer(dt);
+      updateSpawn(dt);
+      updateItems(dt);
+      if (LEVELS[curLevel].boss) updateBoss(dt);
+      updateHUD(false);
+    }
+  }
+  for (let i = 0; i < drifters.length; i++) {
+    const d = drifters[i];
+    d.o.position.x += d.sp * dt;
+    if (d.o.position.x > d.max) d.o.position.x = d.min;
+  }
+  for (let i = 0; i < floaters.length; i++) {
+    const f = floaters[i];
+    if (f.k === 'fly') {
+      f.o.position.y = f.y0 + Math.sin(gameT * 1.6 + f.ph) * 0.5;
+      f.o.position.x = f.x0 + Math.sin(gameT * 0.8 + f.ph) * 0.8;
+      const s = 0.85 + 0.35 * Math.abs(Math.sin(gameT * 2.2 + f.ph));
+      f.o.scale.setScalar(s);
+    } else {
+      f.o.position.x = f.x0 + Math.sin(gameT * 0.5 + f.ph) * 2.2;
+      f.o.position.y = f.y0 + Math.sin(gameT * 1.3 + f.ph) * 0.35;
+    }
+  }
+  updateParticles(dt);
+  animateBunny(now);
+  renderer.render(scene, camera);
+}
+
+/* ----------------------------------------------------------- 21. 启动 */
+function boot() {
+  bootRenderer();
+  onResize();
+  applyLayout();
+  initParticles();
+  bunny = makeBunny();
+  scene.add(bunny);
+  buildLevelScene(LEVELS[0].theme);
+  levelGroup.userData.theme = LEVELS[0].theme;
+  loadSave();
+  showTitle();
+  document.getElementById('loading').classList.add('hide');
+  requestAnimationFrame(frame);
+}
+try {
+  boot();
+} catch (err) {
+  const el = document.getElementById('loading');
+  if (el) { el.classList.remove('hide'); el.textContent = '😢 3D 初始化失败：' + (err && err.message ? err.message : err); }
+  throw err;
+}
+window.__RB__ = {
+  get state() { return STATE; },
+  get level() { return curLevel; },
+  get score() { return score; },
+  get stars() { return starsGot; },
+  get items() { return items.length; },
+  get playHalf() { return PLAY_HALF; }
+};
+
+</script>
+</body>
+</html>
